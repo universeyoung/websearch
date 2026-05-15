@@ -2,7 +2,7 @@
 FROM python:3.11-slim AS builder
 WORKDIR /app
 
-# ==================== 核心优化：替换阿里云Debian国内源（秒速安装） ====================
+# 阿里云APT源
 RUN sed -i "s@deb.debian.org@mirrors.aliyun.com@g" /etc/apt/sources.list.d/debian.sources && \
     apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir --user -i https://mirrors.aliyun.com/pypi/simple/
 FROM python:3.11-slim
 WORKDIR /app
 
-# 替换国内源 + 创建用户
+# 阿里云APT源 + 创建用户
 RUN sed -i "s@deb.debian.org@mirrors.aliyun.com@g" /etc/apt/sources.list.d/debian.sources && \
     useradd -m mcpuser
 
@@ -25,6 +25,8 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/src
 
 USER mcpuser
-COPY --chown=mcpuser:mcpsrc/ ./src/
+
+# ✅ 修复完成：用户组 + 空格
+COPY --chown=mcpuser:mcpuser src/ ./src/
 
 CMD ["python", "-m", "mcp_web_server.server"]
